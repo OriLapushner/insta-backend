@@ -293,3 +293,46 @@ cl('WebSocket is Ready');
 // app.get('/', function(req, res){
 //   res.sendFile(__dirname + '/test-socket.html');
 // });
+
+
+
+
+//OUR CODE@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@
+
+
+
+// app.post('/signup', function (req, res) {
+// 	console.log(req.body)
+// 	dbConnect().then((db) => {
+// 		db.collection('user').insertOne(req.body, function (err, res) {
+// 			if (!err) {
+// 				cl('signup succesful');
+
+// 			} else {
+// 				cl('Signup NOT Succesful');
+// 				res.json(403, { error: 'Signup failed' })
+// 			}
+// 			db.close();
+// 		});
+// 	});
+// });
+
+function ListenToPostDb(url,collection){
+	app.post(url, function (req, res) {
+		console.log(req.body)
+		dbConnect().then((db) => {
+			db.collection(collection).insertOne(req.body, function (err, res) {
+				if (!err) {
+					cl( url + ' succesful');
+	
+				} else {
+					cl(url + ' NOT Succesful');
+					res.json(403, { error: url + 'failed' })
+				}
+				db.close();
+			});
+		});
+	});
+}
+ListenToPostDb('/signup','user')
+ListenToPostDb('/addStory','story')
