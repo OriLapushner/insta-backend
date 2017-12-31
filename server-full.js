@@ -388,8 +388,8 @@ io.on('connection', function (socket) {
 			// .catch(err => console.log('couldnt find userID error: ',err))
 			// db.close();
 		})
-	})
-})
+// 	})
+// })
 
 
 cl('WebSocket is Ready');
