@@ -97,12 +97,12 @@ app.get('/data/:objType/:id', function (req, res) {
 				.then((obj) => {
 					cl("Returning a single" + objType);
 					res.json(obj);
-					db.close();	
+					db.close();
 				})
 				.catch(err => {
 					cl('Cannot get you that ', err)
 					res.json(404, { error: 'not found' })
-					db.close();	
+					db.close();
 				})
 
 		});
@@ -110,8 +110,8 @@ app.get('/data/:objType/:id', function (req, res) {
 
 // DELETE
 app.delete('/data/:objType/:id', function (req, res) {
-	const objType 	= req.params.objType;
-	const objId 	= req.params.id;
+	const objType = req.params.objType;
+	const objId = req.params.id;
 	cl(`Requested to DELETE the ${objType} with id: ${objId}`);
 	dbConnect().then((db) => {
 		const collection = db.collection(objType);
@@ -131,11 +131,11 @@ app.delete('/data/:objType/:id', function (req, res) {
 
 });
 app.post('/data/:userId/liked/:carId', function (req, res) {
-	const userId = new mongodb.ObjectID( req.params.userId );
-	const carId = new mongodb.ObjectID( req.params.carId );
+	const userId = new mongodb.ObjectID(req.params.userId);
+	const carId = new mongodb.ObjectID(req.params.carId);
 
 	dbConnect().then((db) => {
-		db.collection('user').findOne({_id: userId}, (err, user)=>{
+		db.collection('user').findOne({ _id: userId }, (err, user) => {
 			if (!user.likedCarIds) user.likedCarIds = [];
 			// TODO: support toggle by checking if car already exist
 			var isLikedIndex = user.likedCarIds.findIndex(currCarId => currCarId.equals(carId))
@@ -145,8 +145,8 @@ app.post('/data/:userId/liked/:carId', function (req, res) {
 			} else {
 				user.likedCarIds = user.likedCarIds.splice(isLikedIndex, 1);
 			}
-			
-			db.collection('user').updateOne({ _id: userId }, user, (err, data)=>{
+
+			db.collection('user').updateOne({ _id: userId }, user, (err, data) => {
 				if (err) {
 					cl(`Couldnt ADD LIKE`, err)
 					res.json(500, { error: 'Failed to add' })
@@ -194,9 +194,9 @@ app.post('/data/:objType', upload.single('file'), function (req, res) {
 
 // PUT - updates
 app.put('/data/:objType/:id', function (req, res) {
-	const objType 	= req.params.objType;
-	const objId 	= req.params.id;
-	const newObj 	= req.body;
+	const objType = req.params.objType;
+	const objId = req.params.id;
+	const newObj = req.body;
 	if (newObj._id && typeof newObj._id === 'string') newObj._id = new mongodb.ObjectID(newObj._id);
 
 	cl(`Requested to UPDATE the ${objType} with id: ${objId}`);
@@ -223,7 +223,7 @@ app.post('/login', function (req, res) {
 			if (user) {
 				cl('Login Succesful');
 				delete user.pass;
-				req.session.user = user;  
+				req.session.user = user;
 				res.json({ token: '', user });
 			} else {
 				cl('Login NOT Succesful');
@@ -267,19 +267,6 @@ http.listen(3003, function () {
 });
 
 
-io.on('connection', function (socket) {
-	console.log('a user connected');
-	socket.on('disconnect', function () {
-		console.log('user disconnected');
-	});
-	socket.on('chat msg', function (msg) {
-		// console.log('message: ' + msg);
-		io.emit('chat newMsg', msg);
-	});
-});
-
-cl('WebSocket is Ready');
-
 // Some small time utility functions
 
 
@@ -317,14 +304,14 @@ cl('WebSocket is Ready');
 // 	});
 // });
 
-function ListenToPostDb(url,collection){
+function ListenToPostDb(url, collection) {
 	app.post(url, function (req, res) {
 		console.log(req.body)
-		dbConnect().then((db) => {
+		dbConnect().then(function (db) {
 			db.collection(collection).insertOne(req.body, function (err, res) {
 				if (!err) {
-					cl( url + ' succesful');
-	
+					cl(url + ' succesful');
+
 				} else {
 					cl(url + ' NOT Succesful');
 					res.json(403, { error: url + 'failed' })
@@ -334,5 +321,93 @@ function ListenToPostDb(url,collection){
 		});
 	});
 }
-ListenToPostDb('/signup','user')
-ListenToPostDb('/addStory','story')
+ListenToPostDb('/signup', 'user')
+ListenToPostDb('/addStory', 'story')
+
+
+
+io.on('connection', function (socket) {
+
+	console.log('a user connected');
+	socket.on('disconnect', function () {
+		console.log('user disconnected');
+	});
+
+	socket.on('msg', function (msg) {
+		// console.log('message: ' + msg);
+		// io.emit('chat newMsg', msg);
+		console.log('msg received: ' + msg)
+	});
+
+	// socket.on('clientSendStory', (story) => {
+	// 	dbConnect().then(function (db) {
+	// 		db.collection(collection).insertOne('story', function (err, res) {
+	// 			if (!err) {
+	// 				cl(url + ' succesful');
+
+	// 			} else {
+	// 				cl(url + ' NOT Succesful');
+	// 				io.emit('servSendStory',story)
+	// 			}
+	// 			db.close();
+	// });
+
+
+	socket.on('feedReq', (userId) => {
+		// console.log('req feed happend', userId)
+		var query = {};
+
+		dbConnect().then((db) => {
+
+			db.collection('story').find(query).toArray((err, objs) => {
+				if (err) {
+					cl('Cannot get you a list of ', err)
+					// res.json(404, { error: 'not found' })
+				} else {
+					cl("Returning list of " + objs.length + " stories");
+					// res.json(objs);
+					io.emit('feedSend', objs);
+					
+				}
+				db.close();
+			});
+		})
+	})
+
+			// userId = new mongodb.ObjectID(userId)
+			// db.collection('user').findOne({ _id: userId })
+			// 	.then((user) => {
+					// console.log('user from req feed', user)
+					// var followingIds = user.followingIds
+					// console.log('@@@@@@@@@ following ids: ', followingIds)
+					// var following = db.collection('story').find({
+					// 	userId: { "$in": followingIds }
+					// })
+					// io.emit('send feed', tempFeed);
+				// })
+			// .catch(err => console.log('couldnt find userID error: ',err))
+			// db.close();
+		})
+	})
+})
+
+
+cl('WebSocket is Ready');
+
+var tempFeed = [
+	{
+		"_id":"5a47ac49511ce7208416b03d",
+		"post": "some1",
+		"userId": "5a43bc6dbc5c7841dff1247e"
+	},
+	{
+		"_id": "5a47ac49511ce7208416b03d",
+		"post": "some2",
+		"userId": "5a43bc6dbc5c7841dff1247e"
+	},
+	{
+		"_id" : "5a47ac49511ce7208416b03d",
+		"post" : "some3",
+		"userId" : "5a43bc6dbc5c7841dff1247e"
+	}
+]
