@@ -317,6 +317,53 @@ cl('WebSocket is Ready');
 // 	});
 // });
 
+// GETs a list
+app.get('/getStoy/:userId', function (req, res) {
+	const user= req.params.userId;
+	dbConnect().then(db => {
+		const collection = db.collection(story);
+
+		collection.find({userId:user}).toArray((err, objs) => {
+			if (err) {
+				cl('Cannot get you a list of ', err)
+				res.json(404, { error: 'not found' })
+			} else {
+				cl("Returning list of " + objs.length + " " + userId + "s");
+				res.json(objs);
+			}
+			db.close();
+		});
+	});
+});
+//get arry of posts 
+app.get('/data/:story/:id', function (req, res) {
+	const objId = req.params.id;
+	cl(`Getting you an story with id: ${objId}`);
+	dbConnect()
+		.then((db) => {
+			const collection = db.collection(story);
+			let _id;
+			try {
+				_id = new mongodb.ObjectID(objId);
+			}
+			catch (e) {
+				return Promise.reject(e);
+			}
+			return collection.find({ userId: objId })
+				.then((obj) => {
+					cl("Returning a single" + objType);
+					res.json(obj);
+					db.close();	
+				})
+				.catch(err => {
+					cl('Cannot get you that ', err)
+					res.json(404, { error: 'not found' })
+					db.close();	
+				})
+
+		});
+});
+
 function ListenToPostDb(url,collection){
 	app.post(url, function (req, res) {
 		console.log(req.body)
