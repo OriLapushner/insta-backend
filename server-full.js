@@ -78,6 +78,29 @@ app.get('/data/:objType', function (req, res) {
 	});
 });
 
+
+app.get('/userStories/:id', function (req, res) {
+	const objId = req.params.id;
+	console.log({objId})
+	cl(`Getting you an Stories with id: ${objId}`);
+	dbConnect()
+		.then((db) => {
+			const collection = db.collection('story');
+			collection.find({"post.userId": objId }).toArray((err, posts) => {
+				if (posts) {
+					cl("this is,posts")
+					res.json(posts);
+					db.close();
+				} else {
+					cl('no posts');
+					res.json(403, { error: 'Login failed' })
+				}
+
+			})
+		});
+
+});
+
 // GETs a single
 app.get('/data/:objType/:id', function (req, res) {
 	const objType = req.params.objType;
@@ -107,6 +130,7 @@ app.get('/data/:objType/:id', function (req, res) {
 
 		});
 });
+
 
 // DELETE
 app.delete('/data/:objType/:id', function (req, res) {
@@ -323,38 +347,10 @@ function ListenToPostDb(url, collection) {
 			});
 		});
 	});
-	//get arry of posts 
-	// app.get('/data/:story/:id', function (req, res) {
-	// 	const objId = req.params.id;
-	// 	cl(`Getting you an story with id: ${objId}`);
-	// 	dbConnect()
-	// 		.then((db) => {
-	// 			const collection = db.collection(story);
-	// 			let _id;
-	// 			try {
-	// 				_id = new mongodb.ObjectID(objId);
-	// 			}
-	// 			catch (e) {
-	// 				return Promise.reject(e);
-	// 			}
-	// 			return collection.find({ userId: objId })
-	// 				.then((obj) => {
-	// 					cl("Returning a single" + objType);
-	// 					res.json(obj);
-	// 					db.close();	
-	// 				})
-	// 				.catch(err => {
-	// 					cl('Cannot get you that ', err)
-	// 					res.json(404, { error: 'not found' })
-	// 					db.close();	
-	// 				})
-
-	// 		});
-	// });
 }
 function ListenToPostDb(url, collection) {
 	app.post(url, function (req, res) {
-		console.log(req.body)
+		
 		dbConnect().then(function (db) {
 			db.collection(collection).insertOne(req.body, function (err, res) {
 				if (!err) {
@@ -478,3 +474,31 @@ io.on('connection', function (socket) {
 
 
 cl('WebSocket is Ready');
+<<<<<<< HEAD
+=======
+=======
+cl('WebSocket is Ready');
+
+var tempFeed = [
+	{
+		"_id": "5a47ac49511ce7208416b03d",
+		"post": "some1",
+		"userId": "5a43bc6dbc5c7841dff1247e"
+	},
+	{
+		"_id": "5a47ac49511ce7208416b03d",
+		"post": "some2",
+		"userId": "5a43bc6dbc5c7841dff1247e"
+	},
+	{
+		"_id": "5a47ac49511ce7208416b03d",
+		"post": "some3",
+		"userId": "5a43bc6dbc5c7841dff1247e"
+	}
+]
+<<<<<<< HEAD
+
+=======
+>>>>>>> 303de9fd40300dacfdfc53fc72eafeb9ee890c27
+>>>>>>> 8faac66c2a596357964aabf0ff6fa4e87cda3e83
+>>>>>>> edaff56b603655fafd3619ca646edb88ca6ed56c
