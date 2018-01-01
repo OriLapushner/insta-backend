@@ -333,12 +333,49 @@ io.on('connection', function (socket) {
 		console.log('user disconnected');
 	});
 
-	socket.on('msg', function (msg) {
-		// console.log('message: ' + msg);
-		// io.emit('chat newMsg', msg);
-		console.log('msg received: ' + msg)
-	});
-
+	socket.on('sendComment', function (commentInfo) {
+		console.log('SEND COMMENT HAPPEND: ', commentInfo)
+		dbConnect().then(db => {
+			var newComment = {
+				username: commentInfo.username,
+				createdAt: Date.now(),
+				text: commentInfo.text,
+				userId: commentInfo.userId
+			}
+			commentInfo.storyId = new mongodb.ObjectID(commentInfo.storyId)
+			var collection = db.collection('story')
+			collection.update(
+				{ _id: commentInfo.storyId },
+				{ $push: { comments: newComment } }
+			)
+			collection.findOne({ _id: commentInfo.storyId }, (err,story) => {
+				console.log('sending story: ',story)
+				io.emit('postUpdate', story);
+				db.close();
+			})
+		})
+	})
+	socket.on('sendLike', function (likeInfo) {
+		dbConnect().then(db => {
+			likeInfo.storyId = new mongodb.ObjectID(likeInfo.storyId)
+			var collection = db.collection('story')
+			collection.findOne({ _id: likeInfo.storyId })
+				.then(story => {
+					var isLiked = story.likes.findIndex((likeUserId) => {
+						return likeUserId === likeInfo.userId
+					})
+					if (isLiked === -1) {
+						db.collection('story').update(
+							{ _id: likeInfo.storyId },
+							{ $push: { likes: likeInfo.userId } }
+						)
+						console.log('send like event : ', likeInfo)
+					}
+					else console.log('like verification false')
+					db.close();
+				})
+		});
+	})
 	// socket.on('clientSendStory', (story) => {
 	// 	dbConnect().then(function (db) {
 	// 		db.collection(collection).insertOne('story', function (err, res) {
@@ -367,47 +404,29 @@ io.on('connection', function (socket) {
 					cl("Returning list of " + objs.length + " stories");
 					// res.json(objs);
 					io.emit('feedSend', objs);
-					
+
 				}
 				db.close();
 			});
 		})
 	})
 
-			// userId = new mongodb.ObjectID(userId)
-			// db.collection('user').findOne({ _id: userId })
-			// 	.then((user) => {
-					// console.log('user from req feed', user)
-					// var followingIds = user.followingIds
-					// console.log('@@@@@@@@@ following ids: ', followingIds)
-					// var following = db.collection('story').find({
-					// 	userId: { "$in": followingIds }
-					// })
-					// io.emit('send feed', tempFeed);
-				// })
-			// .catch(err => console.log('couldnt find userID error: ',err))
-			// db.close();
-		})
+	// userId = new mongodb.ObjectID(userId)
+	// db.collection('user').findOne({ _id: userId })
+	// 	.then((user) => {
+	// console.log('user from req feed', user)
+	// var followingIds = user.followingIds
+	// console.log('@@@@@@@@@ following ids: ', followingIds)
+	// var following = db.collection('story').find({
+	// 	userId: { "$in": followingIds }
+	// })
+	// io.emit('send feed', tempFeed);
+	// })
+	// .catch(err => console.log('couldnt find userID error: ',err))
+	// db.close();
+})
 // 	})
 // })
 
 
 cl('WebSocket is Ready');
-
-var tempFeed = [
-	{
-		"_id":"5a47ac49511ce7208416b03d",
-		"post": "some1",
-		"userId": "5a43bc6dbc5c7841dff1247e"
-	},
-	{
-		"_id": "5a47ac49511ce7208416b03d",
-		"post": "some2",
-		"userId": "5a43bc6dbc5c7841dff1247e"
-	},
-	{
-		"_id" : "5a47ac49511ce7208416b03d",
-		"post" : "some3",
-		"userId" : "5a43bc6dbc5c7841dff1247e"
-	}
-]
