@@ -377,12 +377,49 @@ io.on('connection', function (socket) {
 		console.log('user disconnected');
 	});
 
-	socket.on('msg', function (msg) {
-		// console.log('message: ' + msg);
-		// io.emit('chat newMsg', msg);
-		console.log('msg received: ' + msg)
-	});
-
+	socket.on('sendComment', function (commentInfo) {
+		console.log('SEND COMMENT HAPPEND: ', commentInfo)
+		dbConnect().then(db => {
+			var newComment = {
+				username: commentInfo.username,
+				createdAt: Date.now(),
+				text: commentInfo.text,
+				userId: commentInfo.userId
+			}
+			commentInfo.storyId = new mongodb.ObjectID(commentInfo.storyId)
+			var collection = db.collection('story')
+			collection.update(
+				{ _id: commentInfo.storyId },
+				{ $push: { comments: newComment } }
+			)
+			collection.findOne({ _id: commentInfo.storyId }, (err,story) => {
+				console.log('sending story: ',story)
+				io.emit('postUpdate', story);
+				db.close();
+			})
+		})
+	})
+	socket.on('sendLike', function (likeInfo) {
+		dbConnect().then(db => {
+			likeInfo.storyId = new mongodb.ObjectID(likeInfo.storyId)
+			var collection = db.collection('story')
+			collection.findOne({ _id: likeInfo.storyId })
+				.then(story => {
+					var isLiked = story.likes.findIndex((likeUserId) => {
+						return likeUserId === likeInfo.userId
+					})
+					if (isLiked === -1) {
+						db.collection('story').update(
+							{ _id: likeInfo.storyId },
+							{ $push: { likes: likeInfo.userId } }
+						)
+						console.log('send like event : ', likeInfo)
+					}
+					else console.log('like verification false')
+					db.close();
+				})
+		});
+	})
 	// socket.on('clientSendStory', (story) => {
 	// 	dbConnect().then(function (db) {
 	// 		db.collection(collection).insertOne('story', function (err, res) {
@@ -436,6 +473,9 @@ io.on('connection', function (socket) {
 // })
 
 
+<<<<<<< HEAD
+cl('WebSocket is Ready');
+=======
 cl('WebSocket is Ready');
 
 var tempFeed = [
@@ -455,4 +495,8 @@ var tempFeed = [
 		"userId": "5a43bc6dbc5c7841dff1247e"
 	}
 ]
+<<<<<<< HEAD
 
+=======
+>>>>>>> 303de9fd40300dacfdfc53fc72eafeb9ee890c27
+>>>>>>> 8faac66c2a596357964aabf0ff6fa4e87cda3e83
