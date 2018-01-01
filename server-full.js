@@ -13,7 +13,7 @@ const express = require('express'),
 	mongodb = require('mongodb')
 
 const clientSessions = require("client-sessions");
-const upload = require('./uploads');
+// const upload = require('./uploads');
 const app = express();
 
 var corsOptions = {
@@ -24,8 +24,10 @@ var corsOptions = {
 const serverRoot = 'http://localhost:3003/';
 const baseUrl = serverRoot + 'data';
 
-app.use(express.static('uploads'));
+var port = process.env.PORT || 3003;
 
+// app.use(express.static('uploads'));
+app.use(express.static('dist'));
 
 app.use(cors(corsOptions));
 app.use(bodyParser.json());
@@ -44,7 +46,7 @@ function dbConnect() {
 
 	return new Promise((resolve, reject) => {
 		// Connection URL
-		var url = 'mongodb://localhost:27017/instaDb';
+		var url = 'mongodb://itsikben:itsikben@ds135917.mlab.com:35917/instadb';
 		// Use connect method to connect to the Server
 		mongodb.MongoClient.connect(url, function (err, db) {
 			if (err) {
@@ -185,36 +187,36 @@ app.post('/data/:userId/liked/:carId', function (req, res) {
 });
 
 // POST - adds 
-app.post('/data/:objType', upload.single('file'), function (req, res) {
-	//console.log('req.file', req.file);
-	// console.log('req.body', req.body);
+// app.post('/data/:objType', upload.single('file'), function (req, res) {
+// 	//console.log('req.file', req.file);
+// 	// console.log('req.body', req.body);
 
-	const objType = req.params.objType;
-	cl("POST for " + objType);
+// 	const objType = req.params.objType;
+// 	cl("POST for " + objType);
 
-	const obj = req.body;
-	delete obj._id;
-	// If there is a file upload, add the url to the obj
-	if (req.file) {
-		obj.imgUrl = serverRoot + req.file.filename;
-	}
+// 	const obj = req.body;
+// 	delete obj._id;
+// 	// If there is a file upload, add the url to the obj
+// 	if (req.file) {
+// 		obj.imgUrl = serverRoot + req.file.filename;
+// 	}
 
-	dbConnect().then((db) => {
-		const collection = db.collection(objType);
+// 	dbConnect().then((db) => {
+// 		const collection = db.collection(objType);
 
-		collection.insert(obj, (err, result) => {
-			if (err) {
-				cl(`Couldnt insert a new ${objType}`, err)
-				res.json(500, { error: 'Failed to add' })
-			} else {
-				cl(objType + " added");
-				res.json(obj);
-			}
-			db.close();
-		});
-	});
+// 		collection.insert(obj, (err, result) => {
+// 			if (err) {
+// 				cl(`Couldnt insert a new ${objType}`, err)
+// 				res.json(500, { error: 'Failed to add' })
+// 			} else {
+// 				cl(objType + " added");
+// 				res.json(obj);
+// 			}
+// 			db.close();
+// 		});
+// 	});
 
-});
+// });
 
 // PUT - updates
 app.put('/data/:objType/:id', function (req, res) {
@@ -280,7 +282,7 @@ app.get('/protected', requireLogin, function (req, res) {
 // Kickup our server 
 // Note: app.listen will not work with cors and the socket
 // app.listen(3003, function () {
-http.listen(3003, function () {
+http.listen(port, function () {
 	console.log(`misterREST server is ready at ${baseUrl}`);
 	console.log(`GET (list): \t\t ${baseUrl}/{entity}`);
 	console.log(`GET (single): \t\t ${baseUrl}/{entity}/{id}`);
