@@ -86,9 +86,9 @@ app.get('/userStories/:id', function (req, res) {
 	dbConnect()
 		.then((db) => {
 			const collection = db.collection('story');
-			collection.find({"post.userId": objId }).toArray((err, posts) => {
+			collection.find({userId: objId }).toArray((err, posts) => {
 				if (posts) {
-					cl("this is,posts")
+					cl("this is,posts",posts)
 					res.json(posts);
 					db.close();
 				} else {
@@ -473,30 +473,6 @@ io.on('connection', function (socket) {
 // })
 
 
-<<<<<<< HEAD
-cl('WebSocket is Ready');
-=======
+
 cl('WebSocket is Ready');
 
-var tempFeed = [
-	{
-		"_id": "5a47ac49511ce7208416b03d",
-		"post": "some1",
-		"userId": "5a43bc6dbc5c7841dff1247e"
-	},
-	{
-		"_id": "5a47ac49511ce7208416b03d",
-		"post": "some2",
-		"userId": "5a43bc6dbc5c7841dff1247e"
-	},
-	{
-		"_id": "5a47ac49511ce7208416b03d",
-		"post": "some3",
-		"userId": "5a43bc6dbc5c7841dff1247e"
-	}
-]
-<<<<<<< HEAD
-
-=======
->>>>>>> 303de9fd40300dacfdfc53fc72eafeb9ee890c27
->>>>>>> 8faac66c2a596357964aabf0ff6fa4e87cda3e83
