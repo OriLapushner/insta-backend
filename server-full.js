@@ -477,26 +477,4 @@ io.on('connection', function (socket) {
 // })
 
 
-<<<<<<< HEAD
 cl('WebSocket is Ready');
-=======
-cl('WebSocket is Ready');
-
-var tempFeed = [
-	{
-		"_id": "5a47ac49511ce7208416b03d",
-		"post": "some1",
-		"userId": "5a43bc6dbc5c7841dff1247e"
-	},
-	{
-		"_id": "5a47ac49511ce7208416b03d",
-		"post": "some2",
-		"userId": "5a43bc6dbc5c7841dff1247e"
-	},
-	{
-		"_id": "5a47ac49511ce7208416b03d",
-		"post": "some3",
-		"userId": "5a43bc6dbc5c7841dff1247e"
-	}
-]
->>>>>>> 303de9fd40300dacfdfc53fc72eafeb9ee890c27
