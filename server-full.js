@@ -81,28 +81,6 @@ app.get('/data/:objType', function (req, res) {
 });
 
 
-app.get('/userStories/:id', function (req, res) {
-	const objId = req.params.id;
-	console.log({objId})
-	cl(`Getting you an Stories with id: ${objId}`);
-	dbConnect()
-		.then((db) => {
-			const collection = db.collection('story');
-			collection.find({userId: objId }).toArray((err, posts) => {
-				if (posts) {
-					cl("this is,posts",posts)
-					res.json(posts);
-					db.close();
-				} else {
-					cl('no posts');
-					res.json(403, { error: 'Login failed' })
-				}
-
-			})
-		});
-
-});
-
 // GETs a single
 app.get('/data/:objType/:id', function (req, res) {
 	const objType = req.params.objType;
@@ -250,6 +228,7 @@ app.post('/login', function (req, res) {
 				cl('Login Succesful');
 				delete user.pass;
 				req.session.user = user;
+				console.log('sending user: ', user)
 				res.json({ token: '', user });
 			} else {
 				cl('Login NOT Succesful');
@@ -352,12 +331,17 @@ function ListenToPostDb(url, collection) {
 }
 function ListenToPostDb(url, collection) {
 	app.post(url, function (req, res) {
-		
+
 		dbConnect().then(function (db) {
-			db.collection(collection).insertOne(req.body, function (err, res) {
+			var currCollection = db.collection(collection)
+			currCollection.insertOne(req.body, function (err, result) {
 				if (!err) {
 					cl(url + ' succesful');
-
+					if (url === '/addStory') {
+						var story = req.body
+						story._id = result.insertedId
+						io.emit('sendNewPost', story);
+					}
 				} else {
 					cl(url + ' NOT Succesful');
 					res.json(403, { error: url + 'failed' })
@@ -394,8 +378,8 @@ io.on('connection', function (socket) {
 				{ _id: commentInfo.storyId },
 				{ $push: { comments: newComment } }
 			)
-			collection.findOne({ _id: commentInfo.storyId }, (err,story) => {
-				console.log('sending story: ',story)
+			collection.findOne({ _id: commentInfo.storyId }, (err, story) => {
+				console.log('sending story: ', story)
 				io.emit('postUpdate', story);
 				db.close();
 			})
@@ -457,6 +441,28 @@ io.on('connection', function (socket) {
 		})
 	})
 
+
+	app.get('/userStories/:id', function (req, res) {
+		const objId = req.params.id;
+		console.log(objId)
+		cl(`Getting you an Stories with id: ${objId}`);
+		dbConnect()
+			.then((db) => {
+				const collection = db.collection('story');
+				collection.find({ userId: objId }).toArray((err, posts) => {
+					if (posts) {
+						cl("this is,posts", posts)
+						res.json(posts);
+						db.close();
+					} else {
+						cl('no posts');
+						res.json(403, { error: 'Login failed' })
+					}
+
+				})
+			});
+
+	});
 	// userId = new mongodb.ObjectID(userId)
 	// db.collection('user').findOne({ _id: userId })
 	// 	.then((user) => {
@@ -475,6 +481,4 @@ io.on('connection', function (socket) {
 // })
 
 
-
 cl('WebSocket is Ready');
-
