@@ -230,6 +230,15 @@ app.post('/login', function (req, res) {
 				req.session.user = user;
 				console.log('sending user: ', user)
 				res.json({ token: '', user });
+				db.collection('story').find({}).toArray((err, objs) => {
+					if (err) {
+						cl('Cannot get you a list of ', err)
+					} else {
+						cl("Returning list of " + objs.length + " stories");
+						io.emit('feedSend', objs);
+					}
+					db.close();
+				});
 			} else {
 				cl('Login NOT Succesful');
 				req.session.user = null;
@@ -423,18 +432,13 @@ io.on('connection', function (socket) {
 	socket.on('feedReq', (userId) => {
 		// console.log('req feed happend', userId)
 		var query = {};
-
 		dbConnect().then((db) => {
-
 			db.collection('story').find(query).toArray((err, objs) => {
 				if (err) {
 					cl('Cannot get you a list of ', err)
-					// res.json(404, { error: 'not found' })
 				} else {
 					cl("Returning list of " + objs.length + " stories");
-					// res.json(objs);
 					io.emit('feedSend', objs);
-
 				}
 				db.close();
 			});
@@ -481,4 +485,4 @@ io.on('connection', function (socket) {
 // })
 
 
-cl('WebSocket is Ready');
+cl('WebSocket is Ready on port: ' + port);
