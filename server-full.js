@@ -360,8 +360,38 @@ function ListenToPostDb(url, collection) {
 		});
 	});
 }
+
+function addRandomPost() {
+
+	var randomPost = {
+		"title": this.title,
+		"userId": "5a4b37cdce959b1cf8f1dc77",
+		"username": "randomGuy",
+		"img": "http://res.cloudinary.com/dxdmd1v1z/image/upload/v1514288579/cut2_s623c9.jpg",
+		"geolocation": { lat: 34, lng: 33 },
+		"createdAt": Date.now(),
+		"likes": [],
+		"comments": [],
+		"text": "posted by random guy"
+	}
+
+	dbConnect().then(function (db) {
+		var currCollection = db.collection('story')
+		currCollection.insertOne(randomPost, function (err, result) {
+			if (!err) {
+				randomPost._id = result.insertedId
+				io.emit('sendNewPost', randomPost);
+				console.log('random post added');
+			}
+			db.close();
+		});
+	});
+}
+
 ListenToPostDb('/signup', 'user')
 ListenToPostDb('/addStory', 'story')
+
+var i = setInterval(addRandomPost, 600000)
 
 
 
