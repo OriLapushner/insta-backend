@@ -318,26 +318,26 @@ http.listen(port, function () {
 // 	});
 // });
 
-function ListenToPostDb(url, collection) {
-	// GETs a list
-	app.get('/getStoy/:userId', function (req, res) {
-		const user = req.params.userId;
-		dbConnect().then(db => {
-			const collection = db.collection(story);
+// function ListenToPostDb(url, collection) {
+// 	// GETs a list
+// 	app.get('/getStoy/:userId', function (req, res) {
+// 		const user = req.params.userId;
+// 		dbConnect().then(db => {
+// 			const collection = db.collection(story);
 
-			collection.find({ userId: user }).toArray((err, objs) => {
-				if (err) {
-					cl('Cannot get you a list of ', err)
-					res.json(404, { error: 'not found' })
-				} else {
-					cl("Returning list of " + objs.length + " " + userId + "s");
-					res.json(objs);
-				}
-				db.close();
-			});
-		});
-	});
-}
+// 			collection.find({ userId: user }).toArray((err, objs) => {
+// 				if (err) {
+// 					cl('Cannot get you a list of ', err)
+// 					res.json(404, { error: 'not found' })
+// 				} else {
+// 					cl("Returning list of " + objs.length + " " + userId + "s");
+// 					res.json(objs);
+// 				}
+// 				db.close();
+// 			});
+// 		});
+// 	});
+// }
 function ListenToPostDb(url, collection) {
 	app.post(url, function (req, res) {
 
