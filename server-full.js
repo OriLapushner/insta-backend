@@ -360,38 +360,8 @@ function ListenToPostDb(url, collection) {
 		});
 	});
 }
-
-function addRandomPost() {
-
-	var randomPost = {
-		"title": this.title,
-		"userId": "5a4b37cdce959b1cf8f1dc77",
-		"username": "randomGuy",
-		"img": "http://res.cloudinary.com/dxdmd1v1z/image/upload/v1514288579/cut2_s623c9.jpg",
-		"geolocation": { lat: 34, lng: 33 },
-		"createdAt": Date.now(),
-		"likes": [],
-		"comments": [],
-		"text": "posted by random guy"
-	}
-
-	dbConnect().then(function (db) {
-		var currCollection = db.collection('story')
-		currCollection.insertOne(randomPost, function (err, result) {
-			if (!err) {
-				randomPost._id = result.insertedId
-				io.emit('sendNewPost', randomPost);
-				console.log('random post added');
-			}
-			db.close();
-		});
-	});
-}
-
 ListenToPostDb('/signup', 'user')
 ListenToPostDb('/addStory', 'story')
-
-var i = setInterval(addRandomPost, 600000)
 
 
 
@@ -439,6 +409,11 @@ io.on('connection', function (socket) {
 							{ $push: { likes: likeInfo.userId } }
 						)
 						console.log('send like event : ', likeInfo)
+						collection.findOne({ _id: likeInfo.storyId }, (err, story) => {
+							console.log('sending story: ', story)
+							io.emit('postUpdate', story);
+							db.close();
+						})
 					}
 					else console.log('like verification false')
 					db.close();
@@ -475,42 +450,42 @@ io.on('connection', function (socket) {
 		})
 	})
 
-
-	app.get('/userStories/:id', function (req, res) {
-		const objId = req.params.id;
-		console.log(objId)
-		cl(`Getting you an Stories with id: ${objId}`);
-		dbConnect()
-			.then((db) => {
-				const collection = db.collection('story');
-				collection.find({ userId: objId }).toArray((err, posts) => {
-					if (posts) {
-						cl("this is,posts", posts)
-						res.json(posts);
-						db.close();
-					} else {
-						cl('no posts');
-						res.json(403, { error: 'Login failed' })
-					}
-
-				})
-			});
-
-	});
-	// userId = new mongodb.ObjectID(userId)
-	// db.collection('user').findOne({ _id: userId })
-	// 	.then((user) => {
-	// console.log('user from req feed', user)
-	// var followingIds = user.followingIds
-	// console.log('@@@@@@@@@ following ids: ', followingIds)
-	// var following = db.collection('story').find({
-	// 	userId: { "$in": followingIds }
-	// })
-	// io.emit('send feed', tempFeed);
-	// })
-	// .catch(err => console.log('couldnt find userID error: ',err))
-	// db.close();
 })
+app.get('/userStories/:id', function (req, res) {
+	const objId = req.params.id;
+	console.log(objId)
+	cl(`Getting you an Stories with id: ${objId}`);
+	dbConnect()
+		.then((db) => {
+			const collection = db.collection('story');
+			collection.find({ userId: objId }).toArray((err, posts) => {
+				if (posts) {
+					cl("this is,posts", posts)
+					res.json(posts);
+					db.close();
+				} else {
+					cl('no posts');
+					res.json(403, { error: 'Login failed' })
+				}
+
+			})
+		});
+
+});
+// userId = new mongodb.ObjectID(userId)
+// db.collection('user').findOne({ _id: userId })
+// 	.then((user) => {
+// console.log('user from req feed', user)
+// var followingIds = user.followingIds
+// console.log('@@@@@@@@@ following ids: ', followingIds)
+// var following = db.collection('story').find({
+// 	userId: { "$in": followingIds }
+// })
+// io.emit('send feed', tempFeed);
+// })
+// .catch(err => console.log('couldnt find userID error: ',err))
+// db.close();
+
 // 	})
 // })
 
